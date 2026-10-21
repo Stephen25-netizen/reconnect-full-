@@ -50,6 +50,9 @@ exports.getOne = async (req, res) => {
       WHERE i.id = $1
     `;
 
+    console.log('GET ONE SQL:', JSON.stringify(sql));
+    console.log('GET ONE ITEM ID:', itemId);
+    
     const result = await db.query(sql, [itemId]);
 
     if (result.rows.length === 0) {
@@ -63,7 +66,9 @@ exports.getOne = async (req, res) => {
     });
   } catch (err) {
     console.error('Get item error:', err);
-
+    console.error('PostgreSQL error code:', err.code);
+    console.error('PostgreSQL error position:', err.position);
+  
     return res.status(500).json({
       error: 'Could not load item.'
     });
