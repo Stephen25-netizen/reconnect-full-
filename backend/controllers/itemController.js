@@ -27,32 +27,31 @@ exports.getAll = async (req, res) => {
     });
   }
 };
-// --------------------------------------------------
 // GET ONE ITEM
-// --------------------------------------------------
+// GET /api/items/:id
 
 exports.getOne = async (req, res) => {
+  const itemId = Number(req.params.id);
+
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    return res.status(400).json({
+      error: 'Invalid item ID.'
+    });
+  }
+
+  const sql = `
+    SELECT
+      i.*,
+      u.name AS owner_name
+    FROM items AS i
+    LEFT JOIN users AS u ON u.id = i.user_id
+    WHERE i.id = $1
+  `;
+
   try {
-    const itemId = Number(req.params.id);
-
-    if (!Number.isInteger(itemId) || itemId <= 0) {
-      return res.status(400).json({
-        error: 'Invalid item ID.'
-      });
-    }
-
-    const sql = `
-      SELECT
-        i.*,
-        u.name AS owner_name
-      FROM items AS i
-      LEFT JOIN users AS u ON u.id = i.user_id
-      WHERE i.id = $1
-    `;
-
     console.log('GET ONE SQL:', JSON.stringify(sql));
     console.log('GET ONE ITEM ID:', itemId);
-    
+
     const result = await db.query(sql, [itemId]);
 
     if (result.rows.length === 0) {
@@ -65,17 +64,17 @@ exports.getOne = async (req, res) => {
       item: result.rows[0]
     });
   } catch (err) {
-    console.error('Get item error:', err);
+    console.error('Get item error:', err.message);
     console.error('PostgreSQL error code:', err.code);
     console.error('PostgreSQL error position:', err.position);
-  
+    console.error('PostgreSQL error detail:', err.detail);
+    console.error('PostgreSQL error hint:', err.hint);
+
     return res.status(500).json({
       error: 'Could not load item.'
     });
   }
 };
-
-
 
 
 // ==================================================
