@@ -128,8 +128,6 @@ exports.mine = async (req, res) => {
     });
   }
 };
-
-
 // Get claims submitted against items owned by the logged-in user
 exports.forOwner = async (req, res) => {
   try {
@@ -137,9 +135,10 @@ exports.forOwner = async (req, res) => {
       `SELECT
         c.*,
         i.title,
+        i.type,
+        i.image_url,
         i.user_id,
-        u.name AS claimant_name,
-       
+        u.name AS claimant_name
       FROM claims c
       JOIN items i ON i.id = c.item_id
       JOIN users u ON u.id = c.claimant_id
@@ -148,16 +147,16 @@ exports.forOwner = async (req, res) => {
       [req.user.id]
     );
 
-    res.json({ claims: result.rows });
+    return res.json({ claims: result.rows });
 
   } catch (err) {
-    console.error('Get received claims error:', err);
-    res.status(500).json({
+    console.error('Get received claims error:', err.message);
+
+    return res.status(500).json({
       error: 'Could not retrieve received claims.'
     });
   }
 };
-
 
 // Approve or reject a claim
 // Approve or reject a claim safely
