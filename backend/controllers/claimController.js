@@ -151,7 +151,21 @@ exports.forOwner = async (req, res) => {
 
   } catch (err) {
     console.error('Get received claims error:', err.message);
-
+console.error('SQL error position:', err.position);
+console.error('SQL query being executed:', `
+SELECT
+  c.*,
+  i.title,
+  i.type,
+  i.image_url,
+  i.user_id,
+  u.name AS claimant_name
+FROM claims c
+JOIN items i ON i.id = c.item_id
+JOIN users u ON u.id = c.claimant_id
+WHERE i.user_id = $1
+ORDER BY c.created_at DESC
+`);
     return res.status(500).json({
       error: 'Could not retrieve received claims.'
     });
