@@ -52,30 +52,30 @@ exports.create = async (req, res) => {
     const proofImageUrl = uploadedFile
   ? `/private-uploads/${uploadedFile.filename}`
   : null;
-    // Save the claim and ownership evidence
-    const result = await db.query(
-      `INSERT INTO claims (
-        item_id,
-        claimant_id,
-        message,
-        identifying_details,
-        proof_image_url
-      )
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [
-        req.params.itemId,
-        req.user.id,
-        message.trim(),
-        identifying_details.trim(),
-        proofImageUrl
-      ]
-    );
+   // Save the claim and ownership evidence
+const result = await db.query(
+  `INSERT INTO claims (
+    item_id,
+    claimant_id,
+    message,
+    identifying_details,
+    proof_image_url
+  )
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING *`,
+  [
+    req.params.itemId,
+    req.user.id,
+    message.trim(),
+    identifying_details.trim(),
+    proofImageUrl
+  ]
+);
 
-    return res.status(201).json({
-      message: 'Claim submitted successfully.',
-      claim: result.rows[0]
-    });
+return res.status(201).json({
+  message: 'Claim submitted successfully.',
+  claim: result.rows[0]
+});
 
   } catch (err) {
     // Delete the uploaded file if the database operation fails
@@ -149,6 +149,9 @@ exports.forOwner = async (req, res) => {
     console.log('Received claims SQL:', JSON.stringify(sql));
 
     const result = await db.query(sql, [req.user.id]);
+
+    console.log('Received claims query succeeded.');
+    console.log('Number of received claims:', result.rows.length);
 
     return res.json({ claims: result.rows });
   } catch (err) {
