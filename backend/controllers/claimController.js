@@ -130,48 +130,37 @@ exports.mine = async (req, res) => {
 };
 // Get claims submitted against items owned by the logged-in user
 exports.forOwner = async (req, res) => {
+  const sql = `
+    SELECT
+      c.*,
+      i.title,
+      i.type,
+      i.image_url,
+      i.user_id,
+      u.name AS claimant_name
+    FROM claims AS c
+    JOIN items AS i ON i.id = c.item_id
+    JOIN users AS u ON u.id = c.claimant_id
+    WHERE i.user_id = $1
+    ORDER BY c.created_at DESC
+  `;
+
   try {
-    const result = await db.query(
-      `SELECT
-        c.*,
-        i.title,
-        i.type,
-        i.image_url,
-        i.user_id,
-        u.name AS claimant_name
-      FROM claims c
-      JOIN items i ON i.id = c.item_id
-      JOIN users u ON u.id = c.claimant_id
-      WHERE i.user_id = $1
-      ORDER BY c.created_at DESC`,
-      [req.user.id]
-    );
+    console.log('Received claims SQL:', JSON.stringify(sql));
+
+    const result = await db.query(sql, [req.user.id]);
 
     return res.json({ claims: result.rows });
-
   } catch (err) {
     console.error('Get received claims error:', err.message);
-console.error('SQL error position:', err.position);
-console.error('SQL query being executed:', `
-SELECT
-  c.*,
-  i.title,
-  i.type,
-  i.image_url,
-  i.user_id,
-  u.name AS claimant_name
-FROM claims c
-JOIN items i ON i.id = c.item_id
-JOIN users u ON u.id = c.claimant_id
-WHERE i.user_id = $1
-ORDER BY c.created_at DESC
-`);
+    console.error('SQL error position:', err.position);
+    console.error('SQL query being executed:', JSON.stringify(sql));
+
     return res.status(500).json({
       error: 'Could not retrieve received claims.'
     });
   }
 };
-
 // Approve or reject a claim
 // Approve or reject a claim safely
 exports.update = async (req, res) => {
