@@ -76,7 +76,45 @@ exports.getOne = async (req, res) => {
   }
 };
 
+// ==================================================
+// GET ITEMS BELONGING TO THE LOGGED-IN USER
+// GET /api/items/mine
+// ==================================================
 
+exports.getMine = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'You must log in to view your items.'
+      });
+    }
+
+    const result = await db.query(
+      `
+        SELECT
+          i.*,
+          u.name AS owner_name
+        FROM items AS i
+        LEFT JOIN users AS u ON u.id = i.user_id
+        WHERE i.user_id = $1
+        ORDER BY i.created_at DESC
+      `,
+      [userId]
+    );
+
+    return res.status(200).json({
+      items: result.rows
+    });
+  } catch (error) {
+    console.error('Get my items error:', error.message);
+
+    return res.status(500).json({
+      error: 'Could not load your items.'
+    });
+  }
+};
 // ==================================================
 // CREATE ITEM
 // POST /api/items
